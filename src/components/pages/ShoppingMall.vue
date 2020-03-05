@@ -24,51 +24,132 @@
     </div>
     <!--分类-->
     <div class="type-bar">
-        <div v-for="(cate,index) in category" :key="index" >
-            <img v-lazy="cate.image" width="90%">
-            <span>{{cate.mallCategoryName}}</span>
-        </div>
+      <div v-for="(cate,index) in category" :key="index">
+        <img v-lazy="cate.image" width="90%" />
+        <span>{{cate.mallCategoryName}}</span>
+      </div>
     </div>
     <!--广告-->
     <div>
-        <img v-lazy="adBanner" width="100%">
+      <img v-lazy="adBanner" width="100%" />
+    </div>
+    <!--商品推荐-->
+    <div class="recommend-area">
+      <div class="recommend-title">商品推荐</div>
+      <div class="recommend-body">
+        <swiper :options="swiperOption">
+          <swiper-slide v-for="(item,index) in recommendGoods" :key="index">
+            <div class="recommend-item">
+              <img :src="item.image" width="80%" />
+              <div>{{item.goodsName}}</div>
+              <div>￥{{item.price | moneyFilter}}(￥{{item.mallPrice | moneyFilter}})</div>
+            </div>
+          </swiper-slide>
+        </swiper>
+      </div>
+    </div>
+    <!--floor one area-->
+    <floorComponent :floorData="floor1" :floorTitle="floorName.floor1"></floorComponent>
+    <floorComponent :floorData="floor2" :floorTitle="floorName.floor2"></floorComponent>
+    <floorComponent :floorData="floor3" :floorTitle="floorName.floor3"></floorComponent>
+    <!--Hot Area-->
+    <div class="hot-area">
+      <div class="hot-title">热卖商品</div>
+      <div class="hot-goods">
+        <!--这里需要一个list组件-->
+        <van-list>
+          <van-row gutter="20">
+            <van-col span="12" v-for="(item,index) in hotGoods" :key="index">
+              <goods-info :goodsImage="item.image" :goodsName="item.name" :goodsPrice="item.price"></goods-info>
+            </van-col>
+          </van-row>
+        </van-list>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
+import axios from "axios";
+import "swiper/dist/css/swiper.css";
+import { swiper, swiperSlide } from "vue-awesome-swiper";
+import floorComponent from "../component/floorComponent";
+import { toMoney } from "@/filter/moneyFilter.js";
+import goodsInfo from "../component/goodsInfoComponent";
+import url from "@/serviceAPI.config.js"
 export default {
   data() {
     return {
       locationIcon: require("../../assets/images/location.png"),
       searchIcon: require("../../assets/images/search.png"),
       bannerPicArray: [
-        { imageUrl: "http://hbimg.b0.upaiyun.com/2c60ab6d1508f04ff48c8e3ae2431fdba3e405c1109ca-4oPCmF_fw658" },
-        { imageUrl: "http://img5.imgtn.bdimg.com/it/u=2852928175,4143309050&fm=26&gp=0.jpg" },
-        { imageUrl: "http://img1.imgtn.bdimg.com/it/u=1231732526,1031486867&fm=15&gp=0.jpg" },
-        { imageUrl: "http://img5.imgtn.bdimg.com/it/u=3005135712,2657691519&fm=26&gp=0.jpg" },
-        { imageUrl: "http://img4.imgtn.bdimg.com/it/u=3897809512,3141483766&fm=26&gp=0.jpg" }
+        {
+          imageUrl:
+            "http://hbimg.b0.upaiyun.com/2c60ab6d1508f04ff48c8e3ae2431fdba3e405c1109ca-4oPCmF_fw658"
+        },
+        {
+          imageUrl:
+            "http://img5.imgtn.bdimg.com/it/u=2852928175,4143309050&fm=26&gp=0.jpg"
+        },
+        {
+          imageUrl:
+            "http://img1.imgtn.bdimg.com/it/u=1231732526,1031486867&fm=15&gp=0.jpg"
+        },
+        {
+          imageUrl:
+            "http://img5.imgtn.bdimg.com/it/u=3005135712,2657691519&fm=26&gp=0.jpg"
+        },
+        {
+          imageUrl:
+            "http://img4.imgtn.bdimg.com/it/u=3897809512,3141483766&fm=26&gp=0.jpg"
+        }
       ],
-      category:[],
-      adBanner:'',
+      category: [],
+      adBanner: "",
+      recommendGoods: [],
+      swiperOption: {
+        slidesPerView: 3
+      },
+      floor1: [],
+      floor2: [],
+      floor3: [],
+      floorName: {},
+      hotGoods:[]    //热卖商品
     };
   },
-  created(){
-      axios({
-          url:'https://easy-mock.com/mock/5e5fae2b5bf624726e90b059/shop/index',
-          method:'get',
+  components: {
+    swiper,
+    swiperSlide,
+    floorComponent,
+    goodsInfo
+  },
+  filters: {
+    moneyFilter(money) {
+      return toMoney(money);
+    }
+  },
+
+  created() {
+    axios({
+      url: url.getShoppingMall,
+      method: "get"
+    })
+      .then(response => {
+        console.log(response);
+        if (response.status == 200) {
+          this.category = response.data.data.category;
+          this.adBanner = response.data.data.advertesPicture.PICTURE_ADDRESS;
+          this.recommendGoods = response.data.data.recommend;
+          this.floor1 = response.data.data.floor1; //楼层1数据
+          this.floor2 = response.data.data.floor2; //楼层2数据
+          this.floor3 = response.data.data.floor3; //楼层3数据
+          this.floorName = response.data.data.floorName;
+          this.hotGoods = response.data.data.hotGoods;
+        }
       })
-      .then(response=>{
-          console.log(response);
-          if(response.status==200){
-              this.category = response.data.data.category;
-              this.adBanner = response.data.data.advertesPicture.PICTURE_ADDRESS;
-          }
-      })
-      .catch(error=>{
-          console.log(error);
-      })
+      .catch(error => {
+        console.log(error);
+      });
   }
 };
 </script>
@@ -100,26 +181,51 @@ export default {
   padding-top: 0.2rem;
   padding-left: 0.3rem;
 }
-.swiper-area{
-    max-height:13rem;
-    clear:both;
-    overflow: hidden;
-  }
-  .type-bar{
-      background-color: #fff;
-      margin: 0 .3rem .3rem .3rem;
-      border-radius: .3rem;
-      font-size: 14px;
-      display: flex;
-      flex-direction: row;
-      flex-wrap: nowrap;
-  }
-  .type-bar div{
-      padding:.3rem;
-      font-size: 12px;
+.swiper-area {
+  max-height: 13rem;
+  clear: both;
+  overflow: hidden;
+}
+.type-bar {
+  background-color: #fff;
+  margin: 0 0.3rem 0.3rem 0.3rem;
+  border-radius: 0.3rem;
+  font-size: 14px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+.type-bar div {
+  padding: 0.3rem;
+  font-size: 12px;
+  text-align: center;
+}
+.type-bar div img {
+  width: 3rem;
+}
+.recommend-area {
+  background-color: #fff;
+  margin-top: 0.3rem;
+}
+.recommend-title {
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  padding: 0.2rem;
+  color: #5e5c5c;
+}
+.recommend-body {
+  border-bottom: 1px solid #eee;
+}
+.recommend-item {
+  width: 99%;
+  border-right: 1px solid #eee;
+  font-size: 14px;
+  text-align: center;
+}
+.hot-area{
       text-align: center;
-  }
-  .type-bar div img{
-      width: 3rem;
+      font-size:14px;
+      height: 1.8rem;
+      line-height:1.8rem;
   }
 </style>
