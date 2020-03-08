@@ -98,10 +98,10 @@ router.get('/getCategoryList',async(ctx)=>{
 })
 
 //**********读取小类别数据接口
-router.get('/getCategorySubList',async(ctx)=>{
+router.post('/getCategorySubList',async(ctx)=>{
     try{
-        //let categoryId = ctx.request.body.categoryId
-        let categoryId = 1
+        let categoryId = ctx.request.body.categoryId
+        // let categoryId = 1
         const CategorySub = mongoose.model('CategorySub')
         let result = await CategorySub.find({MALL_CATEGORY_ID:categoryId}).exec()
         ctx.body={code:200,message:result}
@@ -112,12 +112,17 @@ router.get('/getCategorySubList',async(ctx)=>{
 })
 
 //***********根据类别获取商品列表
-router.get('/getGoodsListByCategorySubID',async(ctx)=>{
+router.post('/getGoodsListByCategorySubID',async(ctx)=>{
     try{
+        let categorySubId = ctx.request.body.categorySubId  //子类别id
+        let page = ctx.request.body.page                    //当前页数
+        let num = 10                                        //每页显示数量
+        let start = (page-1)*num                            //开始位置
+
         //let categorySubId = ctx.request.body.categoryId
         let categorySubId = '2c9f6c946016ea9b016016f79c8e0000'
         const Goods = mongoose.model('Goods')
-        let result = await Goods.find({SUB_ID:categorySubId}).exec()
+        let result = await Goods.find({SUB_ID:categorySubId}).skip(start).limit(num).exec()
         ctx.body={code:200,message:result}
     }catch(err){
         ctx.body={code:500,message:err}
