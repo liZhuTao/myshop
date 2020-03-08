@@ -60,7 +60,12 @@
         <van-list>
           <van-row gutter="20">
             <van-col span="12" v-for="(item,index) in hotGoods" :key="index">
-              <goods-info :goodsId="item.goodsId" :goodsImage="item.image" :goodsName="item.name" :goodsPrice="item.price"></goods-info>
+              <goods-info
+                :goodsId="item.goodsId"
+                :goodsImage="item.image"
+                :goodsName="item.name"
+                :goodsPrice="item.price"
+              ></goods-info>
             </van-col>
           </van-row>
         </van-list>
@@ -76,7 +81,7 @@ import { swiper, swiperSlide } from "vue-awesome-swiper";
 import floorComponent from "../component/floorComponent";
 import { toMoney } from "@/filter/moneyFilter.js";
 import goodsInfo from "../component/goodsInfoComponent";
-import url from "@/serviceAPI.config.js"
+import url from "@/serviceAPI.config.js";
 export default {
   data() {
     return {
@@ -114,7 +119,7 @@ export default {
       floor2: [],
       floor3: [],
       floorName: {},
-      hotGoods:[]    //热卖商品
+      hotGoods: [] //热卖商品
     };
   },
   components: {
@@ -199,10 +204,11 @@ export default {
   padding: 0.3rem;
   font-size: 12px;
   text-align: center;
+  flex: 1;
 }
-.type-bar div img {
+/* .type-bar div img {
   width: 3rem;
-}
+} */
 .recommend-area {
   background-color: #fff;
   margin-top: 0.3rem;
@@ -222,10 +228,15 @@ export default {
   font-size: 14px;
   text-align: center;
 }
-.hot-area{
-      text-align: center;
-      font-size:14px;
-      height: 1.8rem;
-      line-height:1.8rem;
-  }
+.hot-area {
+  text-align: center;
+  font-size: 14px;
+  height: 1.8rem;
+  line-height: 1.8rem;
+}
+.hot-goods {
+  height: 130rem;
+  overflow: hidden;
+  background-color: #fff;
+}
 </style>

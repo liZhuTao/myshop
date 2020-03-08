@@ -19,14 +19,22 @@
         </van-col>
         <van-col span="18">
           <div class="tabCategorySub">
-            <van-tabs v-model="active">
+            <van-tabs v-model="active" @click="onClickCategorySub">
               <van-tab v-for="(item,index) in categorySub" :key="index" :title="item.MALL_SUB_NAME"></van-tab>
             </van-tabs>
           </div>
           <div id="list-div">
             <van-pull-refresh v-model="isRefresh" @refresh="onRefresh">
               <van-list v-model="loading" :finished="finished" @load="onLoad">
-                <div class="list-item" v-for="item in list" :key="item">{{item}}</div>
+                <div class="list-item"  @click="goGoodsInfo(item.ID)" v-for="(item,index) in goodList" :key="index">
+                  <div class="list-item-img">
+                    <img :src="item.IMAGE1" :onerror="errorImg" width="100%" />
+                  </div>
+                  <div class="list-item-text">
+                    <div>{{item.NAME}}</div>
+                    <div class>￥{{item.ORI_PRICE | moneyFilter}}</div>
+                  </div>
+                </div>
               </van-list>
             </van-pull-refresh>
           </div>
@@ -39,6 +47,7 @@
 <script>
 import axios from "axios";
 import url from "@/serviceAPI.config.js";
+import {toMoney} from '@/filter/moneyFilter.js'
 export default {
   data() {
     return {
@@ -51,13 +60,19 @@ export default {
       page: 1, //商品列表的页数
       goodList: [], //商品信息
       categorySubId: "", //商品子分类ID
-      isRefresh: false //下拉刷新
+      isRefresh: false, //下拉刷新
+      errorImg: 'this.src="'+require('@/assets/images/error-img.png')+'"',
     };
+  },
+  filters:{
+    moneyFilter(money){
+      return toMoney(money)
+    }
   },
   mounted() {
     let winHeight = document.documentElement.clientHeight;
-    document.getElementById("leftNav").style.height = winHeight - 46 + "px";
-    document.getElementById("list-div").style.height = winHeight - 90 + "px";
+    document.getElementById("leftNav").style.height = winHeight - 46-50 + "px";
+    document.getElementById("list-div").style.height = winHeight - 90-50 + "px";
   },
   created() {
     this.getCategory();
@@ -85,7 +100,10 @@ export default {
     //点击大类的方法
     clickCategory(index, categoryId) {
       this.categoryIndex = index;
-      this.getCategorySubByCategoryID(categoryId);
+      this.page = 1;
+      this.finished = false;
+      this.goodList = [];
+      this.getCategorySubByCategoryID(categoryId)
     },
     //根据大类ID读取小类类别列表
     getCategorySubByCategoryID(categoryId) {
@@ -99,6 +117,8 @@ export default {
           if (response.data.code == 200 && response.data.message) {
             this.categorySub = response.data.message;
             this.active = 0;
+            this.categorySubId = this.categorySub[0].ID
+            this.onLoad()
           }
         })
         .catch(error => {
@@ -108,21 +128,19 @@ export default {
     //上拉加载方法
     onLoad() {
       setTimeout(() => {
-        for (let i = 0; i < 10; i++) {
-          this.list.push(this.list.length + 1);
-        }
-        this.loading = false;
-        if (this.list.length >= 40) {
-          this.finished = true;
-        }
-      }, 500);
+        this.categorySubId = this.categorySubId
+          ? this.categorySubId
+          : this.categorySub[0].ID;
+        this.getGoodList();
+      }, 1000);
     },
     //下拉刷新方法
     onRefresh() {
       setTimeout(() => {
         this.isRefresh = false;
         this.finished = false;
-        this.list = [];
+        this.goodlist = [];
+        this.page = 1;
         this.onLoad();
       }, 500);
     },
@@ -162,6 +180,11 @@ export default {
       this.finished = false;
       this.page = 1;
       this.onLoad();
+    },
+
+    //跳转的商品详细页
+    goGoodsInfo(id){
+      this.$router.push({name:'Goods',params:{goodsId:id}})
     }
   }
 };
@@ -182,12 +205,22 @@ export default {
   background-color: #fff;
 }
 .list-item {
-  text-align: center;
-  line-height: 80px;
+  display: flex;
+  flex-direction: row;
+  font-size: 0.8rem;
   border-bottom: 1px solid #f0f0f0;
   background-color: #fff;
+  padding: 5px;
 }
 #list-div {
   overflow: scroll;
+}
+.list-item-img {
+  flex: 8;
+}
+.list-item-text {
+  flex: 16;
+  margin-top: 10px;
+  margin-left: 10px;
 }
 </style>
